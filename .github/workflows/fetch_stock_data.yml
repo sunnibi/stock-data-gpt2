@@ -1,4 +1,4 @@
-ame: Fetch Stock Data from Tickers List
+name: Fetch Stock Data from Tickers List
 
 on:
   push:
