@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import yfinance as yf
 
-TICKER_LIST_FILE = "T.JSON"
+TICKER_LIST_FILE = "T.json"
 DATA_DIR = "data"
 PERIOD = "60d"  # 기본 60일
 
