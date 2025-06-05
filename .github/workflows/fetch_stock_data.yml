@@ -13,19 +13,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Echo before checkout
+        run: echo "=== Start Checkout ==="
+
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Echo after checkout
+        run: echo "=== End Checkout ==="
+
+      - name: Echo before setup python
+        run: echo "=== Start Setup Python ==="
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
+      - name: Echo after setup python
+        run: echo "=== End Setup Python ==="
+
+      - name: Echo before install dependencies
+        run: echo "=== Start Install Dependencies ==="
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Echo after install dependencies
+        run: echo "=== End Install Dependencies ==="
+
+      - name: Echo before run script
+        run: echo "=== Start Run Stock Data Script ==="
+
       - name: Run stock data script
         run: python get_stock_data.py
+
+      - name: Echo after run script
+        run: echo "=== End Run Stock Data Script ==="
+
+      - name: Echo before commit data
+        run: echo "=== Start Commit New Data ==="
 
       - name: Commit new data
         run: |
@@ -34,3 +61,6 @@ jobs:
           git add data/
           git commit -m "📈 Auto-update stock data"
           git push || echo "✅ Nothing to commit"
+
+      - name: Echo after commit data
+        run: echo "=== End Commit New Data ==="
