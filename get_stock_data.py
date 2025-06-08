@@ -15,6 +15,7 @@ def load_tickers():
 def accumulate_stock_data(ticker):
     os.makedirs(DATA_DIR, exist_ok=True)
     data_path = os.path.join(DATA_DIR, f"{ticker}.json")
+
     # 기존 데이터 불러오기
     if os.path.exists(data_path):
         with open(data_path, encoding="utf-8") as f:
@@ -22,14 +23,19 @@ def accumulate_stock_data(ticker):
     else:
         price_data = {}
 
-    # yfinance로 60일 데이터 다운로드
+    # yfinance로 데이터 다운로드
     df = yf.download(ticker, period=PERIOD)
-    # 날짜별 종가 누적
+
     for idx, row in df.iterrows():
         date_str = idx.strftime("%Y-%m-%d")
-        price_data[date_str] = float(row["Close"])
+        price_data[date_str] = {
+            "open": round(float(row["Open"]), 2),
+            "high": round(float(row["High"]), 2),
+            "low": round(float(row["Low"]), 2),
+            "close": round(float(row["Close"]), 2),
+            "volume": int(row["Volume"])
+        }
 
-    # 저장
     with open(data_path, "w", encoding="utf-8") as f:
         json.dump(price_data, f, ensure_ascii=False, indent=2)
     print(f"Updated {data_path} ({len(price_data)} days)")
