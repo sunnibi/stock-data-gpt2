@@ -9,8 +9,8 @@ TICKER_LIST_FILE = "T.json"
 DATA_DIR = "data"
 PERIOD = "60d"  # 최근 60일
 
-# TwelveData API 설정
-TWELVEDATA_API_KEY = os.getenv("TWELVEDATA_API_KEY")
+# TwelveData API 설정 (환경변수명 반영)
+TWELVEDATA_API_KEY = os.getenv("TWELVE_API_KEY")
 TWELVEDATA_URL = "https://api.twelvedata.com/time_series"
 
 def load_tickers():
@@ -22,7 +22,7 @@ def load_tickers():
 
 def fetch_from_twelvedata(ticker):
     if not TWELVEDATA_API_KEY:
-        print("[WARN] TwelveData API KEY 누락. 환경변수 TWELVEDATA_API_KEY 필요.")
+        print("[WARN] TwelveData API KEY 누락. 환경변수 TWELVE_API_KEY 필요.")
         return None
     params = {
         "symbol": ticker,
@@ -119,4 +119,5 @@ def main():
             fail += 1
     print(f"\n[SUMMARY] 성공: {success}, 실패: {fail}")
 
-if
+if __name__ == "__main__":
+    main()
