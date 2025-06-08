@@ -21,6 +21,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0    # 전체 커밋 히스토리를 받아와야 pull/rebase가 정상 동작합니다
 
       - name: Echo after checkout
         run: echo "=== End Checkout ==="
