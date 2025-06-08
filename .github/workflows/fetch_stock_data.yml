@@ -61,6 +61,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+          git pull origin ${{ github.ref_name }} --rebase
           git add data/
           git commit -m "📈 Auto-update stock data" || echo "Nothing to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
