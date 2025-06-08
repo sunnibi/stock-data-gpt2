@@ -21,6 +21,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0             # 전체 커밋 히스토리 받아오기(깊이 제한 없음)
 
       - name: Echo after checkout
         run: echo "=== End Checkout ==="
@@ -61,7 +63,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          git pull origin ${{ github.ref_name }} --rebase
+          git pull origin ${{ github.ref_name }} --rebase     # 리모트 최신 커밋 먼저 반영
           git add data/
           git commit -m "📈 Auto-update stock data" || echo "Nothing to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
