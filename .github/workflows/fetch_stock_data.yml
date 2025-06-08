@@ -8,6 +8,9 @@ on:
     - cron: '0 */6 * * *'     # ⏰ 6시간마다 자동 실행
   workflow_dispatch:          # 👆 수동 실행도 허용
 
+permissions:
+  contents: write             # ✅ push를 위한 권한 추가
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -59,8 +62,8 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add data/
-          git commit -m "📈 Auto-update stock data"
-          git push || echo "✅ Nothing to commit"
+          git commit -m "📈 Auto-update stock data" || echo "Nothing to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
 
       - name: Echo after commit data
         run: echo "=== End Commit New Data ==="
