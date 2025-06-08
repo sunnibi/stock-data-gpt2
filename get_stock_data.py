@@ -1,49 +1,55 @@
-import sys
-import json
 import os
-from datetime import datetime
+import json
 import yfinance as yf
+from twelvedata import TDClient
+from requests.exceptions import RequestException
 
-TICKER_LIST_FILE = "T.json"
-DATA_DIR = "data"
-PERIOD = "60d"  # 기본 60일
+# GitHub Actions에서는 TWELVE_API_KEY를 Secret으로 등록
+TD_API_KEY = os.getenv("TWELVE_API_KEY")
 
-def load_tickers():
-    with open(TICKER_LIST_FILE, encoding="utf-8") as f:
-        return json.load(f).get("tickers", [])
+def fetch_data_twelvedata(ticker):
+    try:
+        td = TDClient(apikey=TD_API_KEY)
+        ts = td.time_series(symbol=ticker, interval="1day", outputsize=60)
+        data = ts.as_json()["values"]
 
-def accumulate_stock_data(ticker):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    data_path = os.path.join(DATA_DIR, f"{ticker}.json")
+        return [
+            {
+                "date": item["datetime"],
+                "open": float(item["open"]),
+                "high": float(item["high"]),
+                "low": float(item["low"]),
+                "close": float(item["close"]),
+                "volume": int(float(item["volume"]))
+            }
+            for item in data
+        ]
+    except (KeyError, RequestException, ValueError) as e:
+        print(f"TwelveData 실패: {e}")
+        return None
 
-    # 기존 데이터 불러오기
-    if os.path.exists(data_path):
-        with open(data_path, encoding="utf-8") as f:
-            price_data = json.load(f)
-    else:
-        price_data = {}
+def fetch_data_yfinance(ticker):
+    try:
+        df = yf.download(ticker, period="60d")
+        return [
+            {
+                "date": idx.strftime('%Y-%m-%d'),
+                "open": round(float(row["Open"]), 2),
+                "high": round(float(row["High"]), 2),
+                "low": round(float(row["Low"]), 2),
+                "close": round(float(row["Close"]), 2),
+                "volume": int(row["Volume"])
+            }
+            for idx, row in df.iterrows()
+        ]
+    except Exception as e:
+        print(f"yfinance 실패: {e}")
+        return None
 
-    # yfinance로 데이터 다운로드
-    df = yf.download(ticker, period=PERIOD)
-
-    for idx, row in df.iterrows():
-        date_str = idx.strftime("%Y-%m-%d")
-        price_data[date_str] = {
-            "open": round(float(row["Open"]), 2),
-            "high": round(float(row["High"]), 2),
-            "low": round(float(row["Low"]), 2),
-            "close": round(float(row["Close"]), 2),
-            "volume": int(row["Volume"])
-        }
-
-    with open(data_path, "w", encoding="utf-8") as f:
-        json.dump(price_data, f, ensure_ascii=False, indent=2)
-    print(f"Updated {data_path} ({len(price_data)} days)")
-
-def main():
-    tickers = load_tickers()
-    for ticker in tickers:
-        accumulate_stock_data(ticker)
-
-if __name__ == "__main__":
-    main()
+def fetch_stock_data(ticker):
+    print(f"🔎 {ticker} 데이터 수집 중...")
+    data = fetch_data_twelvedata(ticker)
+    if not data:
+        print("⚠️ TwelveData 실패 → yfinance 백업으로 전환")
+        data = fetch_data_yfinance(ticker)
+    return data
