@@ -21,8 +21,6 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0    # 전체 커밋 히스토리를 받아와야 pull/rebase가 정상 동작합니다
 
       - name: Echo after checkout
         run: echo "=== End Checkout ==="
@@ -47,6 +45,9 @@ jobs:
       - name: Echo after install dependencies
         run: echo "=== End Install Dependencies ==="
 
+      - name: Export TwelveData API Key
+        run: echo "TWELVE_API_KEY=${{ secrets.TWELVE_API_KEY }}" >> $GITHUB_ENV
+
       - name: Echo before run script
         run: echo "=== Start Run Stock Data Script ==="
 
@@ -59,13 +60,12 @@ jobs:
       - name: Echo before commit data
         run: echo "=== Start Commit New Data ==="
 
-      - name: Commit and push new data safely
+      - name: Commit new data
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add data/
           git commit -m "📈 Auto-update stock data" || echo "Nothing to commit"
-          git pull --rebase https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ${{ github.ref_name }} || echo "Nothing to rebase"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
 
       - name: Echo after commit data
