@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 import requests
 import yfinance as yf
+import time  # 추가
 
 TICKER_LIST_FILE = "T.json"
 DATA_DIR = "data"
@@ -109,15 +110,46 @@ def process_ticker(ticker):
     save_stock_data(ticker, stock_data)
     return True
 
+def save_total_json(tickers):
+    total_data = {}
+    for ticker in tickers:
+        data_path = os.path.join(DATA_DIR, f"{ticker}.json")
+        if os.path.exists(data_path):
+            with open(data_path, encoding="utf-8") as f:
+                total_data[ticker] = json.load(f)
+        else:
+            print(f"[WARN] {ticker}.json 파일이 존재하지 않습니다.")
+    total_path = os.path.join(DATA_DIR, "total.json")
+    with open(total_path, "w", encoding="utf-8") as f:
+        json.dump(total_data, f, ensure_ascii=False, indent=2)
+    print(f"[INFO] {total_path} 파일 저장 완료 (총 {len(total_data)}개 티커)")
+
 def main():
     tickers = load_tickers()
     success, fail = 0, 0
-    for ticker in tickers:
-        if process_ticker(ticker):
-            success += 1
-        else:
-            fail += 1
+    batch_size = 8
+    use_twelvedata = TWELVEDATA_API_KEY is not None
+    if use_twelvedata and len(tickers) > batch_size:
+        for i in range(0, len(tickers), batch_size):
+            batch = tickers[i:i+batch_size]
+            for ticker in batch:
+                if process_ticker(ticker):
+                    success += 1
+                else:
+                    fail += 1
+            if i + batch_size < len(tickers):
+                print("[INFO] TwelveData API 제한으로 1분 대기...")
+                time.sleep(60)
+    else:
+        for ticker in tickers:
+            if process_ticker(ticker):
+                success += 1
+            else:
+                fail += 1
     print(f"\n[SUMMARY] 성공: {success}, 실패: {fail}")
+
+    # total.json 저장
+    save_total_json(tickers)
 
 if __name__ == "__main__":
     main()
